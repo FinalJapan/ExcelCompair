@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-
+import io
 st.set_page_config(page_title="Excel比較アプリ", layout="wide")
 
 st.title("📊 Excelファイル比較アプリ（ローカル完結）")
@@ -10,13 +10,13 @@ st.write("2つのExcelファイルを読み込んで、指定した列の値が�
 file1 = st.file_uploader("🔼 比較対象ファイル①（Excel）", type=["xlsx", "csv"], key="file1")
 file2 = st.file_uploader("🔼 比較対象ファイル②（Excel）", type=["xlsx", "csv"], key="file2")
 
-# ファイルの読み込み処理（修正版）
 def read_file(uploaded_file):
     if uploaded_file.name.endswith(".csv"):
-        # 日本語CSV対応！（エラーを無視しつつ）
-        return pd.read_csv(uploaded_file, encoding="cp932", errors="ignore")
+        # アップロードされたCSVファイルをバイナリから文字として読み込む
+        return pd.read_csv(io.StringIO(uploaded_file.read().decode("cp932", errors="ignore")))
     else:
-        return pd.read_excel(uploaded_file)
+        # ExcelファイルはそのままBytesIOで読み込み
+        return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
 
 # 比較実行
