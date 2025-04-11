@@ -6,9 +6,16 @@ st.set_page_config(page_title="Excel比較アプリ", layout="wide")
 st.title("📊 Excelファイル比較アプリ（ローカル完結）")
 st.write("2つのExcelファイルを読み込んで、指定した列の値が一致しているかをチェックします。")
 
-# ファイルアップロード（2ファイル）
-file1 = st.file_uploader("🔼 比較対象ファイル①（Excel）", type=["xlsx", "csv"], key="file1")
-file2 = st.file_uploader("🔼 比較対象ファイル②（Excel）", type=["xlsx", "csv"], key="file2")
+# データの比較（短い方に合わせる）
+compare_len = min(len(df1), len(df2))
+
+# 列名をアップロードファイルの名前に変更！
+comparison_result = pd.DataFrame({
+    file1.name: df1[col1].iloc[:compare_len].astype(str),
+    file2.name: df2[col2].iloc[:compare_len].astype(str)
+})
+comparison_result["一致しているか"] = comparison_result[file1.name] == comparison_result[file2.name]
+
 
 def read_file(uploaded_file):
     if uploaded_file.name.endswith(".csv"):
