@@ -10,12 +10,14 @@ st.write("2つのExcelファイルを読み込んで、指定した列の値が�
 file1 = st.file_uploader("🔼 比較対象ファイル①（Excel）", type=["xlsx", "csv"], key="file1")
 file2 = st.file_uploader("🔼 比較対象ファイル②（Excel）", type=["xlsx", "csv"], key="file2")
 
-# ファイルの読み込み処理
+# ファイルの読み込み処理（修正版）
 def read_file(uploaded_file):
     if uploaded_file.name.endswith(".csv"):
-        return pd.read_csv(uploaded_file)
+        # 日本語CSV対応！（エラーを無視しつつ）
+        return pd.read_csv(uploaded_file, encoding="cp932", errors="ignore")
     else:
         return pd.read_excel(uploaded_file)
+
 
 # 比較実行
 if file1 and file2:
