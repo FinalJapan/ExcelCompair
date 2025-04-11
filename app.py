@@ -1,19 +1,57 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 
-st.title("🎓 生徒の点数分析アプリ（クラウド版）")
+st.set_page_config(page_title="Excel比較アプリ", layout="wide")
 
-names = ['あかり', 'たけし', 'ゆうこ', 'けんじ', 'さくら', 'だいご', 'まい', 'しんじ', 'はなこ', 'ゆうた']
-scores = np.random.randint(0, 101, size=10)
+st.title("📊 Excelファイル比較アプリ（ローカル完結）")
+st.write("2つのExcelファイルを読み込んで、指定した列の値が一致しているかをチェックします。")
 
-df = pd.DataFrame({'名前': names, '点数': scores})
-st.dataframe(df)
+# ファイルアップロード（2ファイル）
+file1 = st.file_uploader("🔼 比較対象ファイル①（Excel）", type=["xlsx", "csv"], key="file1")
+file2 = st.file_uploader("🔼 比較対象ファイル②（Excel）", type=["xlsx", "csv"], key="file2")
 
-sorted_df = df.sort_values(by='点数', ascending=False)
-st.subheader("🏆 上位3人")
-st.write(sorted_df.head(3))
+# ファイルの読み込み処理
+def read_file(uploaded_file):
+    if uploaded_file.name.endswith(".csv"):
+        return pd.read_csv(uploaded_file)
+    else:
+        return pd.read_excel(uploaded_file)
 
-st.subheader("📊 点数グラフ")
-st.bar_chart(df.set_index('名前'))
+# 比較実行
+if file1 and file2:
+    df1 = read_file(file1)
+    df2 = read_file(file2)
+
+    st.success("ファイルの読み込みに成功しました！")
+
+    st.subheader("🔍 どの列を比較しますか？")
+    col1 = st.selectbox("ファイル①の列を選択", df1.columns)
+    col2 = st.selectbox("ファイル②の列を選択", df2.columns)
+
+    # データの比較（短い方に合わせる）
+    compare_len = min(len(df1), len(df2))
+    comparison_result = pd.DataFrame({
+        "ファイル①": df1[col1].iloc[:compare_len].astype(str),
+        "ファイル②": df2[col2].iloc[:compare_len].astype(str)
+    })
+    comparison_result["一致しているか"] = comparison_result["ファイル①"] == comparison_result["ファイル②"]
+
+    st.subheader("📋 比較結果")
+
+    # 色分け表示（Streamlitでは表示だけ）
+    def highlight_diff(row):
+        if row["一致しているか"]:
+            return ["background-color: #d4edda"] * 3  # 緑
+        else:
+            return ["background-color: #f8d7da"] * 3  # 赤
+
+    st.dataframe(comparison_result.style.apply(highlight_diff, axis=1))
+
+    # ダウンロード
+    csv = comparison_result.to_csv(index=False).encode("utf-8-sig")
+    st.download_button(
+        label="📥 結果をCSVでダウンロード",
+        data=csv,
+        file_name="比較結果.csv",
+        mime="text/csv"
+    )
