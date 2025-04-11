@@ -6,15 +6,20 @@ st.set_page_config(page_title="Excel比較アプリ", layout="wide")
 st.title("📊 Excelファイル比較アプリ（ローカル完結）")
 st.write("2つのExcelファイルを読み込んで、指定した列の値が一致しているかをチェックします。")
 
-# データの比較（短い方に合わせる）
-compare_len = min(len(df1), len(df2))
+if file1 and file2:
+    df1 = read_file(file1)
+    df2 = read_file(file2)
 
-# 列名をアップロードファイルの名前に変更！
-comparison_result = pd.DataFrame({
-    file1.name: df1[col1].iloc[:compare_len].astype(str),
-    file2.name: df2[col2].iloc[:compare_len].astype(str)
-})
-comparison_result["一致しているか"] = comparison_result[file1.name] == comparison_result[file2.name]
+    # ✅ ここで df1 / df2 があるからOK！
+    compare_len = min(len(df1), len(df2))
+
+    # 比較列の指定（前に作ったやつ）
+    comparison_result = pd.DataFrame({
+        file1.name: df1[col1].iloc[:compare_len].astype(str),
+        file2.name: df2[col2].iloc[:compare_len].astype(str)
+    })
+    comparison_result["一致しているか"] = comparison_result[file1.name] == comparison_result[file2.name]
+
 
 
 def read_file(uploaded_file):
