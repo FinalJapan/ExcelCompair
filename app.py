@@ -3,9 +3,9 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.5", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.6", layout="wide")
 
-# CSS（アップロードボックス見た目調整）
+# カスタムCSS
 st.markdown("""
 <style>
 body { background-color: white; color: black; }
@@ -20,9 +20,9 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.3.5 完結版）")
+st.title("📊 Excel / CSV 比較アプリ（v4.3.6 完成版）")
 
-# アップロードUI（ラベルなし＋プレースホルダー風ヒント）
+# アップロードUI（ラベルなし）
 with st.container():
     file1 = st.file_uploader("", type=["csv", "xlsx"], key="file1",
         help="ファイル①をここにドラッグ＆ドロップするか、クリックで選択")
@@ -30,7 +30,7 @@ with st.container():
     file2 = st.file_uploader("", type=["csv", "xlsx"], key="file2",
         help="ファイル②をここにドラッグ＆ドロップするか、クリックで選択")
 
-# ファイル読み込み関数
+# ファイル読み込み
 def read_file(uploaded_file):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
@@ -38,7 +38,7 @@ def read_file(uploaded_file):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
-# A列B列形式の表示補助関数
+# 列名変換（A列、B列 表記）
 def num_to_col_letter(n):
     result = ''
     while n >= 0:
@@ -46,20 +46,20 @@ def num_to_col_letter(n):
         n = n // 26 - 1
     return result
 
-# メイン処理
+# アプリ本体
 if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
     st.success("✅ ファイル読み込み成功！")
 
-    # 列選択（A列形式でわかりやすく）
+    # 比較列選択
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     col1 = df1.columns[col_options1.index(st.selectbox("ファイル①の列", col_options1, index=0))]
 
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
     col2 = df2.columns[col_options2.index(st.selectbox("ファイル②の列", col_options2, index=0))]
 
-    # 並び替え選択（比較方法選択）
+    # 比較モード
     st.subheader("🔀 並び替え方法を選んでください")
     sort_mode = st.radio(
         "ファイル①をマスターデータとして、ファイル②をどう扱うか？",
@@ -101,14 +101,14 @@ if file1 and file2:
         sorted_result["判定"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
         sorted_result["判定"] = sorted_result["判定"].map(lambda x: "✅" if x else "❌")
 
-    # 見た目：背景色＆太字
+    # 背景色・太字スタイル
     def highlight_row(row):
         color = "#d4edda" if row["判定"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = sorted_result.style.apply(highlight_row, axis=1)
 
-    # 結果表示
+    # 表示
     st.subheader("📋 比較結果")
     st.dataframe(styled_df, use_container_width=True)
 
