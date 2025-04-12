@@ -3,7 +3,7 @@ import pandas as pd
 import io
 import math
 
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.8", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.9", layout="wide")
 
 st.markdown("""
 <style>
@@ -13,8 +13,8 @@ div[class*="stCheckbox"] > label {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV ファイル 比較アプリ（v3.8 行番号＋りゅうじ検索付き）")
-st.caption("✔ 行番号表示対応｜✔ ✅/❌で比較｜✔ ページ分割｜✔ 特定値の検索可能！")
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.9 最終版）")
+st.caption("✔ 行番号表示｜✔ ✅/❌で比較｜✔ ページ分割｜✔ 全列強制検索機能付き！")
 
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
 file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"])
@@ -54,6 +54,17 @@ if file1 and file2:
 
     st.success("✅ ファイル読み込み成功！")
 
+    # 🔍 ファイル①全体から「りゅうじ」探す
+    st.subheader("🔎 ファイル①全体から『りゅうじ』を強制検索")
+    mask = df1.astype(str).apply(lambda col: col.str.contains("りゅうじ", na=False))
+    found_rows = df1[mask.any(axis=1)]
+
+    if not found_rows.empty:
+        st.success("🎉 『りゅうじ』はファイル①に存在します！以下の行です👇")
+        st.write(found_rows)
+    else:
+        st.error("😢 『りゅうじ』はファイル①のどの列にも見つかりませんでした…")
+
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     selected1 = st.selectbox("ファイル①の列", col_options1, key="col_1")
     col1 = df1.columns[[i for i, s in enumerate(col_options1) if s == selected1][0]]
@@ -70,25 +81,13 @@ if file1 and file2:
     col_name2 = file2.name
 
     comparison_result = pd.DataFrame({
-        "行番号": [i + 1 for i in range(max_len)],  # Excel見た目と同じ行番号
+        "行番号": [i + 1 for i in range(max_len)],
         col_name1: col1_data,
         col_name2: col2_data
     })
 
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
-
-    # 🔍 フリーワード検索（例：りゅうじ）
-    keyword = st.text_input("🔍 キーワード検索（名前など）", value="りゅうじ")
-    if keyword:
-        filtered = comparison_result[
-            comparison_result[col_name1].str.contains(keyword, na=False)
-        ]
-        st.subheader(f"🔍 検索結果：『{keyword}』が含まれる行")
-        if not filtered.empty:
-            st.dataframe(filtered, use_container_width=True)
-        else:
-            st.warning(f"『{keyword}』は見つかりませんでした。")
 
     # 並べ替え
     st.subheader("🔀 並べ替え設定")
