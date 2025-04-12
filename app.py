@@ -91,7 +91,7 @@ if file1 and file2:
         sorted_result = pd.DataFrame(result_rows, columns=[
             f"ファイル①（{col1}）",
             f"ファイル②（{col2}）",
-            "判定"
+            "ステータス"
         ])
     else:
         sorted_result = pd.DataFrame({
