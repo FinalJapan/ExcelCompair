@@ -97,7 +97,7 @@ if file1 and file2:
     elif sort_mode == "ファイル①の順に合わせる":
         sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
     elif sort_mode == "ファイル②の順に合わせる":
-        sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
+        sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df2[col2]).reset_index()
     
     # ✅ 背景色すべての列に適用（✅/❌列にも戻した）
     def highlight_diff(row):
