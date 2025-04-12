@@ -33,11 +33,11 @@ st.title("📊 Excel / CSV 比較アプリ（v4.2 最終UX強化版）")
 
 # 📂 アップロードボックス（視覚強化）
 with st.container():
-    st.markdown('<div id="file1-box"><h4>📁 ファイル① をアップロード</h4></div>', unsafe_allow_html=True)
+    st.markdown(, unsafe_allow_html=True)
     file1 = st.file_uploader("", type=["csv", "xlsx"], key="file1")
 
 with st.container():
-    st.markdown('<div id="file2-box"><h4>📁 ファイル② をアップロード</h4></div>', unsafe_allow_html=True)
+    st.markdown(, unsafe_allow_html=True)
     file2 = st.file_uploader("", type=["csv", "xlsx"], key="file2")
 
 # ファイル読み込み
