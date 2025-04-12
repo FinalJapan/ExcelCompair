@@ -73,25 +73,27 @@ if file1 and file2:
 
     # 並び替え処理
     if sort_mode == "ファイル①の順にファイル②を並び替える":
-        if df1[col1].duplicated().any():
-            st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
-            sorted_result = comparison_result
-        else:
-            merged_df = pd.merge(
-                df1[[col1]].astype(str),
-                df2[[col2]].astype(str),
-                how="left",
-                left_on=col1,
-                right_on=col2
-            )
-            sorted_result = pd.DataFrame({
-                f"ファイル①（{col1}）": merged_df[col1],
-                f"ファイル②（{col2}）": merged_df[col2]
-            })
-            sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
-            sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
-    else:
+    if df1[col1].duplicated().any():
+        st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
         sorted_result = comparison_result
+    else:
+        # ファイル①とファイル②の比較列をstrで揃える
+        col1_series = df1[col1].astype(str)
+        col2_series = df2[col2].astype(str)
+
+        # ファイル②のデータをSeries化してインデックスに値を使う
+        file2_series = pd.Series(col2_series.values, index=col2_series)
+
+        # reindexでファイル①の並び順にファイル②を合わせる（存在しない値はNaNになる）
+        aligned_file2 = file2_series.reindex(col1_series).values
+
+        sorted_result = pd.DataFrame({
+            f"ファイル①（{col1}）": col1_series,
+            f"ファイル②（{col2}）": aligned_file2
+        })
+        sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+        sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
+
 
     # 結果表示
     st.subheader("📋 比較結果")
