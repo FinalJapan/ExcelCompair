@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import io
 
-# ページ設定（最初）
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.6", layout="wide")
+# ページ設定
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.7", layout="wide")
 
-# チェックボックス黒文字対応（ライトテーマ風）
+# テーマ調整（ライト風）
 st.markdown("""
 <style>
 body { background-color: white; color: black; }
@@ -13,13 +13,13 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v3.6 完成版）")
+st.title("📊 Excel / CSV 比較アプリ（v3.7 完全版）")
 
 # アップロード
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"], key="file1")
 file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"], key="file2")
 
-# 列名を「A列（名前）」の形式に変換
+# 列名を「A列（列名）」形式にする関数
 def num_to_col_letter(n):
     result = ''
     while n >= 0:
@@ -27,7 +27,7 @@ def num_to_col_letter(n):
         n = n // 26 - 1
     return result
 
-# ファイル読み込み関数
+# ファイル読み込み
 def read_file(uploaded_file):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
@@ -35,13 +35,12 @@ def read_file(uploaded_file):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
-# メイン処理
 if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
     st.success("✅ ファイル読み込み成功！")
 
-    # 列選択（A列形式表示）
+    # 比較列の選択（A列付きで表示）
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     col_selected1 = st.selectbox("ファイル①の列", col_options1)
     col1 = df1.columns[col_options1.index(col_selected1)]
@@ -50,11 +49,9 @@ if file1 and file2:
     col_selected2 = st.selectbox("ファイル②の列", col_options2)
     col2 = df2.columns[col_options2.index(col_selected2)]
 
-    # 比較列の抽出
+    # 比較結果の初期作成
     col1_data = df1[col1].astype(str).fillna("")
     col2_data = df2[col2].astype(str).fillna("")
-
-    # 比較結果（初期）
     comparison_result = pd.DataFrame({
         f"ファイル①（{col1}）": col1_data,
         f"ファイル②（{col2}）": col2_data
@@ -62,7 +59,7 @@ if file1 and file2:
     comparison_result["一致しているか"] = comparison_result[f"ファイル①（{col1}）"] == comparison_result[f"ファイル②（{col2}）"]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
 
-    # 並び替え設定
+    # 並び替え選択
     st.subheader("🔀 並び替え方法を選んでください")
     sort_mode = st.radio(
         "比較列に基づいて、ファイル②の順番をどう並べますか？",
@@ -74,13 +71,12 @@ if file1 and file2:
         help="ファイル①の比較列の順番に合わせて、ファイル②の値を並び替えます。"
     )
 
+    # 並び替え処理
     if sort_mode == "ファイル①の順にファイル②を並び替える":
         if df1[col1].duplicated().any():
             st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
             sorted_result = comparison_result
         else:
-            
-            # mergeでファイル①順にファイル②を並べる（型をstrに統一！）
             merged_df = pd.merge(
                 df1[[col1]].astype(str),
                 df2[[col2]].astype(str),
@@ -88,7 +84,6 @@ if file1 and file2:
                 left_on=col1,
                 right_on=col2
             )
-
             sorted_result = pd.DataFrame({
                 f"ファイル①（{col1}）": merged_df[col1],
                 f"ファイル②（{col2}）": merged_df[col2]
@@ -102,7 +97,7 @@ if file1 and file2:
     st.subheader("📋 比較結果")
     st.dataframe(sorted_result, use_container_width=True)
 
-    # ダウンロードボタン
+    # ダウンロード
     csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
         label="📥 結果をCSVでダウンロード",
