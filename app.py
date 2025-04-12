@@ -13,7 +13,7 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.1 完成版）")
+st.title("📊 Excel / CSV 比較アプリ")
 
 # ファイル読み込み関数
 def read_file(uploaded_file):
