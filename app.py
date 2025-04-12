@@ -76,13 +76,15 @@ if file1 and file2:
     col_name1 = file1.name
     col_name2 = file2.name
 
+    # 比較結果テーブル作成（列名を選択された列名に合わせる！）
     comparison_result = pd.DataFrame({
-        col_name1: col1_data,
-        col_name2: col2_data
+        f"ファイル①（{col1}）": col1_data,
+        f"ファイル②（{col2}）": col2_data
     })
-
-    comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
+    
+    comparison_result["一致しているか"] = comparison_result[f"ファイル①（{col1}）"] == comparison_result[f"ファイル②（{col2}）"]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
+
     
     # 並び替え設定：ラジオボタン＋説明付き
     st.subheader("🔀 並び替え方法を選んでください")
