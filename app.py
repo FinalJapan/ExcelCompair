@@ -2,17 +2,20 @@ import streamlit as st
 import pandas as pd
 import io
 
-# ✅ カスタムCSS：チェックボックスの文字色を常に黒に
+# ✅ ✅ ✅ 必ずこの位置に！
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.2", layout="wide")
+
+# ✅ UIカスタムCSS（その後でOK）
 st.markdown("""
 <style>
-/* チェックボックスラベルを黒文字に固定 */
 div[class*="stCheckbox"] > label {
     color: black !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.2", layout="wide")
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.2 最終版）")
+
 st.title("📊 Excel / CSV ファイル 比較アプリ（v3.2 最終版）")
 st.caption("✔ 複数シート対応｜✔ 並べ替え｜✔ アルファベット列名｜✔ UI見やすさ改善")
 
