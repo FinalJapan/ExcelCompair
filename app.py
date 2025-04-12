@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.1", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.2", layout="wide")
 
 st.markdown("""
 <style>
@@ -12,8 +12,8 @@ div[class*="stCheckbox"] > label {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.1 最終シンプル版）")
-st.caption("✔ 列を選んで比較｜✔ ✅/❌｜✔ 色付き｜✔ 最小構成で安定動作！")
+st.title("📊 Excel / CSV 比較アプリ（v4.2 空欄削除対応）")
+st.caption("✔ 空白行は非表示｜✔ ✅/❌比較｜✔ 最小構成の超安定版")
 
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
 file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"])
@@ -60,6 +60,11 @@ if file1 and file2:
         col_name2: col2_data
     })
 
+    # ✅ 空欄の行を除外
+    comparison_result = comparison_result[
+        ~((comparison_result[col_name1] == "") & (comparison_result[col_name2] == ""))
+    ]
+
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
 
@@ -69,7 +74,7 @@ if file1 and file2:
         else:
             return ["background-color: #fdf2f2; color: black"] * len(row)
 
-    st.subheader("📋 比較結果（全件表示）")
+    st.subheader("📋 比較結果（空欄行は除外）")
     st.dataframe(
         comparison_result.style.apply(highlight_diff, axis=1),
         use_container_width=True,
