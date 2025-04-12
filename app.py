@@ -71,6 +71,7 @@ if file1 and file2:
         help="ファイル①の比較列の順番に合わせて、ファイル②の値を並び替えます。"
     )
 
+
     # 並び替え処理
 if sort_mode == "ファイル①の順にファイル②を並び替える":
     if df1[col1].duplicated().any():
