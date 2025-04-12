@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
 import io
+import math
 
-# ✅ ページ設定（一番上に）
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.5", layout="wide")
+# ✅ ページ設定（必ず一番上）
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.6", layout="wide")
 
-# ✅ チェックボックス対策CSS（常に黒文字）
+# ✅ チェックボックスの文字色を黒に固定（ダークテーマ対策）
 st.markdown("""
 <style>
 div[class*="stCheckbox"] > label {
@@ -14,14 +15,14 @@ div[class*="stCheckbox"] > label {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV ファイル 比較アプリ（v3.5 表示数改善）")
-st.caption("✔ 最大100行まで表示｜✔ ✅/❌で見やすい｜✔ 片方だけのデータもOK｜✔ 色付き｜✔ 安定した比較ロジック")
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.6 ページネーション対応）")
+st.caption("✔ ページ単位で表示切替｜✔ ✅/❌で比較明確｜✔ 色分けあり｜✔ 大量データも安心！")
 
 # ファイルアップロード
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
 file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"])
 
-# A列B列表記変換
+# ヘルパー関数たち
 def num_to_col_letter(n):
     result = ''
     while n >= 0:
@@ -29,7 +30,6 @@ def num_to_col_letter(n):
         n = n // 26 - 1
     return result
 
-# ファイル読み込み用
 def load_file(file):
     return io.BytesIO(file.read())
 
@@ -43,7 +43,7 @@ def get_sheet_names(file_data):
     xls = pd.ExcelFile(file_data)
     return xls.sheet_names
 
-# 比較処理スタート
+# ファイル読み込み＆処理
 if file1 and file2:
     file1_data = load_file(file1)
     file2_data = load_file(file2)
@@ -89,21 +89,32 @@ if file1 and file2:
     is_ascending = sort_order == "昇順"
     sorted_result = comparison_result.sort_values(by=sort_column, ascending=is_ascending)
 
-    # ✅ 色付き（全列対応）
+    # ✅ ページネーション設定
+    rows_per_page = 20  # ← 1ページに表示する行数（自由に変更OK！）
+    total_rows = len(sorted_result)
+    total_pages = math.ceil(total_rows / rows_per_page)
+
+    st.subheader("📑 表示ページ")
+    page = st.number_input("ページ番号を選んでください", min_value=1, max_value=total_pages, step=1)
+    start_idx = (page - 1) * rows_per_page
+    end_idx = start_idx + rows_per_page
+    paginated_result = sorted_result.iloc[start_idx:end_idx]
+
+    # ✅ 色付き表示（✅ / ❌ に応じて）
     def highlight_diff(row):
         if row["一致しているか"] == "✅":
             return ["background-color: #f2fdf2; color: black"] * len(row)
         else:
             return ["background-color: #fdf2f2; color: black"] * len(row)
 
-    # ✅ 表示（最大100行まで表示）
-    st.subheader("📋 比較結果（最大100行表示）")
+    # ✅ 表示（ページごとの結果）
+    st.subheader(f"📋 比較結果（{rows_per_page}件 × {total_pages}ページ中 {page}ページ目）")
     st.dataframe(
-        sorted_result.head(100).style.apply(highlight_diff, axis=1),
+        paginated_result.style.apply(highlight_diff, axis=1),
         use_container_width=True,
         height=600
     )
 
-    # ダウンロード
+    # ✅ 全件ダウンロード
     csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
-    st.download_button("📥 結果をCSVでダウンロード", data=csv, file_name="比較結果.csv", mime="text/csv")
+    st.download_button("📥 全データをCSVでダウンロード", data=csv, file_name="比較結果.csv", mime="text/csv")
