@@ -81,9 +81,9 @@ if file1 and file2:
     # 🖍 色分け表示
     def highlight_diff(row):
         if row["一致しているか"]:
-            return ["background-color: #d4edda"] * len(row)
+            return ["background-color: #eaf6ea"] * len(row)
         else:
-            return ["background-color: #f8d7da"] * len(row)
+            return ["background-color: #fcebea"] * len(row)
 
     st.subheader("📋 比較結果（並び替え済み）")
     st.dataframe(sorted_result.style.apply(highlight_diff, axis=1), use_container_width=True)
