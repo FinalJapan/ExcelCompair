@@ -95,12 +95,24 @@ if file1 and file2:
     # 並べ替え処理（列名は自動で決定）
     if sort_mode == "昇順":
         sorted_result = comparison_result.sort_values(by=comparison_result.columns[0], ascending=True)
+    
     elif sort_mode == "降順":
         sorted_result = comparison_result.sort_values(by=comparison_result.columns[0], ascending=False)
+    
     elif sort_mode == "ファイル①の順に合わせる":
-        sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
+        if comparison_result[comparison_result.columns[0]].duplicated().any():
+            st.warning("⚠ 並び替えできません：ファイル①の列に重複があります。")
+            sorted_result = comparison_result
+        else:
+            sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
+    
     elif sort_mode == "ファイル②の順に合わせる":
-        sorted_result = comparison_result.set_index(comparison_result.columns[1]).reindex(df2[col2]).reset_index()
+        if comparison_result[comparison_result.columns[1]].duplicated().any():
+            st.warning("⚠ 並び替えできません：ファイル②の列に重複があります。")
+            sorted_result = comparison_result
+        else:
+            sorted_result = comparison_result.set_index(comparison_result.columns[1]).reindex(df2[col2]).reset_index()
+
 
     
     # ✅ 背景色すべての列に適用（✅/❌列にも戻した）
