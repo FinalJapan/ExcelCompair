@@ -92,26 +92,31 @@ if file1 and file2:
         key="sort_mode"
     )
     
-    # 並べ替え処理（列名は自動で決定）
-    if sort_mode == "昇順":
-        sorted_result = comparison_result.sort_values(by=comparison_result.columns[0], ascending=True)
+    # 並び替え設定：ラジオボタン＋説明付き
+    st.subheader("🔀 並び替え方法を選んでください")
     
-    elif sort_mode == "降順":
-        sorted_result = comparison_result.sort_values(by=comparison_result.columns[0], ascending=False)
+    sort_mode = st.radio(
+        "比較列に基づいて、ファイル②の順番をどう並べますか？",
+        options=[
+            "元のまま表示（並び替えしない）",
+            "ファイル①の順にファイル②を並び替える"
+        ],
+        index=0,
+        help="ファイル①の比較列の順番に合わせて、ファイル②の値を並び替えます。"
+    )
     
-    elif sort_mode == "ファイル①の順に合わせる":
-        if comparison_result[comparison_result.columns[0]].duplicated().any():
-            st.warning("⚠ 並び替えできません：ファイル①の列に重複があります。")
+    # 並び替え処理（比較列に固定）
+    if sort_mode == "ファイル①の順にファイル②を並び替える":
+        # 重複チェック：ファイル①の比較列に同じ値が複数あると reindex できない
+        if df1[col1].duplicated().any():
+            st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
             sorted_result = comparison_result
         else:
-            sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
-    
-    elif sort_mode == "ファイル②の順に合わせる":
-        if comparison_result[comparison_result.columns[1]].duplicated().any():
-            st.warning("⚠ 並び替えできません：ファイル②の列に重複があります。")
-            sorted_result = comparison_result
-        else:
-            sorted_result = comparison_result.set_index(comparison_result.columns[1]).reindex(df2[col2]).reset_index()
+            # ファイル②の比較列を、ファイル①の比較列順に並び替える
+            sorted_result = comparison_result.set_index(comparison_result.columns[1]).reindex(df1[col1]).reset_index()
+    else:
+        sorted_result = comparison_result
+
 
 
     
