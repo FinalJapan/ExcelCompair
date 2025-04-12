@@ -57,15 +57,37 @@ if file1 and file2:
     df1 = read_file(file1_data, file1.name, sheet1).reset_index(drop=True)
     df2 = read_file(file2_data, file2.name, sheet2).reset_index(drop=True)
 
+    # ✅ データがちゃんと読み込まれてるか表示して確認！
+st.subheader("🔍 ファイル①の読み込み内容プレビュー")
+st.write(df1.head(10))
+
+st.subheader("🔍 ファイル②の読み込み内容プレビュー")
+st.write(df2.head(10))
+
     st.success("✅ ファイル読み込み成功！")
 
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     selected1 = st.selectbox("ファイル①の列", col_options1, key="col_1")
     col1 = df1.columns[[i for i, s in enumerate(col_options1) if s == selected1][0]]
+　　# ✅ 選んだ列に「りゅうじ」がいるか確認！
+st.subheader("🔍 選んだ列の上から10件（りゅうじ確認）")
+st.write("ファイル①：" + col1)
+st.write(df1[col1].head(10))
+
+st.write("ファイル②：" + col2)
+st.write(df2[col2].head(10))
 
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
     selected2 = st.selectbox("ファイル②の列", col_options2, key="col_2")
     col2 = df2.columns[[i for i, s in enumerate(col_options2) if s == selected2][0]]
+
+# ✅ 選んだ列に「りゅうじ」がいるか確認！
+st.subheader("🔍 選んだ列の上から10件（りゅうじ確認）")
+st.write("ファイル①：" + col1)
+st.write(df1[col1].head(10))
+
+st.write("ファイル②：" + col2)
+st.write(df2[col2].head(10))
 
     max_len = max(len(df1), len(df2))
     col1_data = df1[col1].reindex(range(max_len)).astype(str).fillna("")
@@ -78,6 +100,10 @@ if file1 and file2:
         col_name1: col1_data,
         col_name2: col2_data
     })
+
+# ✅ 比較結果全体を見て、りゅうじが含まれてるか確認！
+st.subheader("🔍 比較結果全体（りゅうじチェック）")
+st.write(comparison_result)
 
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
