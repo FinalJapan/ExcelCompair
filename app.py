@@ -42,10 +42,10 @@ if file1 and file2:
 
     # 列選択
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
-    col1 = df1.columns[col_options1.index(st.selectbox("ファイル①の列", col_options1, index=0))]
+    col1 = df1.columns[col_options1.index(st.selectbox("ファイル①の列", col_options1))]
 
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
-    col2 = df2.columns[col_options2.index(st.selectbox("ファイル②の列", col_options2, index=0))]
+    col2 = df2.columns[col_options2.index(st.selectbox("ファイル②の列", col_options2))]
 
     # 並び替え選択
     st.subheader("🔀 並び替え方法を選んでください")
