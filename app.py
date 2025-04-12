@@ -3,31 +3,16 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.8", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.0", layout="wide")
 
-# ライトテーマ風CSS（チェックボックスの文字色も調整）
-st.markdown("""
-<style>
-body { background-color: white; color: black; }
-div[class*="stCheckbox"] > label { color: black !important; }
-</style>
-""", unsafe_allow_html=True)
-
-st.title("📊 Excel / CSV 比較アプリ（v3.8 最終版）")
+# ページタイトル
+st.title("📊 Excel / CSV 比較アプリ（v4.0 完全版）")
 
 # アップロード
-file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"], key="file1")
-file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"], key="file2")
+file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
+file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"])
 
-# A列（列名）表示に変換
-def num_to_col_letter(n):
-    result = ''
-    while n >= 0:
-        result = chr(n % 26 + 65) + result
-        n = n // 26 - 1
-    return result
-
-# ファイル読み込み
+# ファイル読み込み関数
 def read_file(uploaded_file):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
@@ -35,60 +20,53 @@ def read_file(uploaded_file):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
+# アプリ本体
 if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
-    st.success("✅ ファイル読み込み成功！")
+    st.success("✅ ファイル読み込み完了！")
 
-    # 比較列の選択（A列〜表記）
-    col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
-    col_selected1 = st.selectbox("ファイル①の列", col_options1)
-    col1 = df1.columns[col_options1.index(col_selected1)]
+    # 列選択
+    col1 = st.selectbox("ファイル①の比較列を選択", df1.columns)
+    col2 = st.selectbox("ファイル②の比較列を選択", df2.columns)
 
-    col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
-    col_selected2 = st.selectbox("ファイル②の列", col_options2)
-    col2 = df2.columns[col_options2.index(col_selected2)]
+    # 比較列抽出（型統一）
+    col1_data = df1[col1].astype(str).fillna("")
+    col2_data = df2[col2].astype(str).fillna("")
 
-    # データ準備（文字列に統一）
-    col1_series = df1[col1].astype(str).fillna("")
-    col2_series = df2[col2].astype(str).fillna("")
-
-    # 初期の比較結果
+    # 比較結果作成
     comparison_result = pd.DataFrame({
-        f"ファイル①（{col1}）": col1_series,
-        f"ファイル②（{col2}）": col2_series
+        f"ファイル①（{col1}）": col1_data,
+        f"ファイル②（{col2}）": col2_data
     })
     comparison_result["一致しているか"] = comparison_result[f"ファイル①（{col1}）"] == comparison_result[f"ファイル②（{col2}）"]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
 
-    # 並び替えラジオボタン
-    st.subheader("🔀 並び替え方法を選んでください")
+    # 並び替え設定
+    st.subheader("🔀 並び替え設定")
     sort_mode = st.radio(
-        "比較列に基づいて、ファイル②の順番をどう並べますか？",
+        "並び替え方法を選んでください",
         options=[
-            "元のまま表示（並び替えしない）",
-            "ファイル①の順にファイル②を並び替える"
+            "Excelの入力順（A2から順番）",
+            "❌を上に表示（不一致優先）",
+            "比較列の昇順",
+            "比較列の降順"
         ],
         index=0
     )
 
-    if sort_mode == "ファイル①の順にファイル②を並び替える":
-        if df1[col1].duplicated().any():
-            st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
-            sorted_result = comparison_result
-        else:
-            # reindexでファイル②をファイル①の順に揃える
-            file2_series = pd.Series(col2_series.values, index=col2_series)
-            aligned_file2 = file2_series.reindex(col1_series).values
-
-            sorted_result = pd.DataFrame({
-                f"ファイル①（{col1}）": col1_series,
-                f"ファイル②（{col2}）": aligned_file2
-            })
-            sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
-            sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
-    else:
+    # 並び替え処理
+    if sort_mode == "Excelの入力順（A2から順番）":
         sorted_result = comparison_result
+
+    elif sort_mode == "❌を上に表示（不一致優先）":
+        sorted_result = comparison_result.sort_values(by="一致しているか")
+
+    elif sort_mode == "比較列の昇順":
+        sorted_result = comparison_result.sort_values(by=f"ファイル①（{col1}）", ascending=True)
+
+    elif sort_mode == "比較列の降順":
+        sorted_result = comparison_result.sort_values(by=f"ファイル①（{col1}）", ascending=False)
 
     # 結果表示
     st.subheader("📋 比較結果")
