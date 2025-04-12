@@ -3,10 +3,8 @@ import pandas as pd
 import io
 import math
 
-# ✅ ページ設定（最初に）
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.7", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.8", layout="wide")
 
-# ✅ チェックボックス文字色（黒固定）
 st.markdown("""
 <style>
 div[class*="stCheckbox"] > label {
@@ -15,8 +13,8 @@ div[class*="stCheckbox"] > label {
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV ファイル 比較アプリ（v3.7 完全版）")
-st.caption("✔ ✅/❌で比較結果表示｜✔ ページ分割｜✔ りゅうじ追跡機能つき！")
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.8 行番号＋りゅうじ検索付き）")
+st.caption("✔ 行番号表示対応｜✔ ✅/❌で比較｜✔ ページ分割｜✔ 特定値の検索可能！")
 
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
 file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"])
@@ -56,12 +54,6 @@ if file1 and file2:
 
     st.success("✅ ファイル読み込み成功！")
 
-    # 🔍 データ確認
-    st.subheader("🔍 ファイル①のプレビュー")
-    st.write(df1.head(10))
-    st.subheader("🔍 ファイル②のプレビュー")
-    st.write(df2.head(10))
-
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     selected1 = st.selectbox("ファイル①の列", col_options1, key="col_1")
     col1 = df1.columns[[i for i, s in enumerate(col_options1) if s == selected1][0]]
@@ -78,6 +70,7 @@ if file1 and file2:
     col_name2 = file2.name
 
     comparison_result = pd.DataFrame({
+        "行番号": [i + 1 for i in range(max_len)],  # Excel見た目と同じ行番号
         col_name1: col1_data,
         col_name2: col2_data
     })
@@ -85,11 +78,17 @@ if file1 and file2:
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
 
-    # 🔍 りゅうじチェック機能
-    if "りゅうじ" in comparison_result[col_name1].values:
-        st.success("🎉 『りゅうじ』はファイル①にいます！")
-    else:
-        st.warning("😢 『りゅうじ』がファイル①に見つかりませんでした。")
+    # 🔍 フリーワード検索（例：りゅうじ）
+    keyword = st.text_input("🔍 キーワード検索（名前など）", value="りゅうじ")
+    if keyword:
+        filtered = comparison_result[
+            comparison_result[col_name1].str.contains(keyword, na=False)
+        ]
+        st.subheader(f"🔍 検索結果：『{keyword}』が含まれる行")
+        if not filtered.empty:
+            st.dataframe(filtered, use_container_width=True)
+        else:
+            st.warning(f"『{keyword}』は見つかりませんでした。")
 
     # 並べ替え
     st.subheader("🔀 並べ替え設定")
@@ -109,7 +108,6 @@ if file1 and file2:
     end_idx = start_idx + rows_per_page
     paginated_result = sorted_result.iloc[start_idx:end_idx]
 
-    # ✅ 色付き表示
     def highlight_diff(row):
         if row["一致しているか"] == "✅":
             return ["background-color: #f2fdf2; color: black"] * len(row)
