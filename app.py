@@ -62,8 +62,8 @@ if file1 and file2:
 
     # ✅ 空欄の行を除外
   　comparison_result = comparison_result[
-　      (comparison_result[col_name1] != "") | (comparison_result[col_name2] != "")
-　  ]
+        (comparison_result[col_name1] != "") | (comparison_result[col_name2] != "")
+　      ]
 
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
