@@ -86,7 +86,7 @@ if file1 and file2:
 
     # 並べ替え設定
     st.subheader("🔀 並べ替え設定")
-    sort_mode = st.selectbox("並べ替え方法を選択", ["昇順", "降順", "ファイル①の順に合わせる"], key="sort_mode")
+    sort_mode = st.selectbox("並べ替え方法を選択", ["昇順", "降順", "ファイル①の順に合わせる","ファイル②の順に合わせる"], key="sort_mode")
     sort_column = st.selectbox("並べ替える列", comparison_result.columns, key="sort_column")
 
     # 並べ替え処理
@@ -96,7 +96,9 @@ if file1 and file2:
         sorted_result = comparison_result.sort_values(by=sort_column, ascending=False)
     elif sort_mode == "ファイル①の順に合わせる":
         sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
-
+    elif sort_mode == "ファイル②の順に合わせる":
+        sorted_result = comparison_result.set_index(comparison_result.columns[0]).reindex(df1[col1]).reset_index()
+    
     # ✅ 背景色すべての列に適用（✅/❌列にも戻した）
     def highlight_diff(row):
         if row["一致しているか"] == "✅":
