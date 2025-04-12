@@ -90,10 +90,16 @@ if file1 and file2:
 
     # 色つき表示（淡くて文字は黒）
     def highlight_diff(row):
-        if row["一致しているか"]:
-            return ["background-color: #f2fdf2; color: black"] * len(row)
+    styles = []
+    for col in row.index:
+        if col == "一致しているか":
+            styles.append("")  # デフォルトのまま（背景色なし）
+        elif row["一致しているか"]:
+            styles.append("background-color: #f2fdf2; color: black")  # 淡い緑
         else:
-            return ["background-color: #fdf2f2; color: black"] * len(row)
+            styles.append("background-color: #fdf2f2; color: black")  # 淡い赤
+    return styles
+
 
     st.subheader("📋 比較結果")
     st.dataframe(sorted_result.style.apply(highlight_diff, axis=1), use_container_width=True)
