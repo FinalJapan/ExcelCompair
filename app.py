@@ -79,14 +79,16 @@ if file1 and file2:
             st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
             sorted_result = comparison_result
         else:
-            # mergeでファイル①順にファイル②を並べる
+            
+            # mergeでファイル①順にファイル②を並べる（型をstrに統一！）
             merged_df = pd.merge(
-                df1[[col1]],
-                df2[[col2]],
+                df1[[col1]].astype(str),
+                df2[[col2]].astype(str),
                 how="left",
                 left_on=col1,
                 right_on=col2
             )
+
             sorted_result = pd.DataFrame({
                 f"ファイル①（{col1}）": merged_df[col1],
                 f"ファイル②（{col2}）": merged_df[col2]
