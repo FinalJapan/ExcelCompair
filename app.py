@@ -3,9 +3,9 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.6.1", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.6", layout="wide")
 
-st.title("📊 Excel / CSV 比較アプリ（v4.3.6.1 空欄なし対応）")
+st.title("📊 Excel / CSV 比較アプリ（v4.3.6）")
 
 # ファイルアップロード
 file1 = st.file_uploader("ファイル①をアップロード", type=["csv", "xlsx"])
@@ -39,10 +39,10 @@ if file1 and file2:
     for val in file2_values:
         if val in file1_values:
             matched_file1_values.append(val)
-            file1_values.remove(val)
+            file1_values.remove(val)  # 一度使用した値は削除
             match_results.append("✅")
         else:
-            matched_file1_values.append(val)  # ←空欄にせず、そのまま出す
+            matched_file1_values.append("")
             match_results.append("❌")
 
     # 結果のデータフレーム作成
