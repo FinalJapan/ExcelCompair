@@ -3,9 +3,9 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.5", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.3", layout="wide")
 
-# カスタムCSS
+# カスタムCSS（見た目調整）
 st.markdown("""
 <style>
 body { background-color: white; color: black; }
@@ -20,13 +20,24 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.3.5）")
+st.title("📊 Excel / CSV 比較アプリ（v4.3.3 完結UX版）")
 
-# アップロードボックス
+# アップロード（ラベルなし・プレースホルダー風）
 with st.container():
-    file1 = st.file_uploader("", type=["csv", "xlsx"], key="file1", help="ファイル①を選択")
+    file1 = st.file_uploader(
+        label="",
+        type=["csv", "xlsx"],
+        key="file1",
+        help="ファイル①をここにドラッグ＆ドロップするか、クリックで選択"
+    )
+
 with st.container():
-    file2 = st.file_uploader("", type=["csv", "xlsx"], key="file2", help="ファイル②を選択")
+    file2 = st.file_uploader(
+        label="",
+        type=["csv", "xlsx"],
+        key="file2",
+        help="ファイル②をここにドラッグ＆ドロップするか、クリックで選択"
+    )
 
 # ファイル読み込み関数
 def read_file(uploaded_file):
@@ -36,7 +47,7 @@ def read_file(uploaded_file):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
-# A列B列表記関数
+# A列表示用関数
 def num_to_col_letter(n):
     result = ''
     while n >= 0:
@@ -44,6 +55,7 @@ def num_to_col_letter(n):
         n = n // 26 - 1
     return result
 
+# アプリ本体処理
 if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
@@ -56,43 +68,55 @@ if file1 and file2:
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
     col2 = df2.columns[col_options2.index(st.selectbox("ファイル②の列", col_options2, index=0))]
 
-    st.subheader("🔍 比較結果（ファイル①基準）")
+    # 並び替え選択
+    st.subheader("🔀 並び替え方法を選んでください")
+    sort_mode = st.radio(
+        "ファイル①をマスターデータとして、ファイル②の順番をどうしますか？",
+        options=[
+            "元のまま表示（並び替えしない）",
+            "ファイル①の順にファイル②を並び替える"
+        ],
+        index=0
+    )
 
-    # マスターデータの順に、ファイル②の値を1対1でマッチング
     col1_series = df1[col1].astype(str)
     col2_series = df2[col2].astype(str)
 
-    used = [False] * len(col2_series)
-    result_rows = []
+    if sort_mode == "ファイル①の順にファイル②を並び替える":
+        used = [False] * len(col2_series)
+        result_rows = []
 
-    for v in col1_series:
-        matched = False
-        for i, w in enumerate(col2_series):
-            if not used[i] and w == v:
-                used[i] = True
-                result_rows.append((v, w, "✅"))
-                matched = True
-                break
-        if not matched:
-            result_rows.append((v, "", "❌"))
+        for v in col1_series:
+            found = False
+            for i, w in enumerate(col2_series):
+                if not used[i] and w == v:
+                    used[i] = True
+                    result_rows.append((v, w, "✅"))
+                    found = True
+                    break
+            if not found:
+                result_rows.append((v, "", "❌"))
 
-    result_df = pd.DataFrame(result_rows, columns=[
-        f"ファイル①（{col1}）",
-        f"ファイル②（{col2}）",
-        "判定"
-    ])
+        sorted_result = pd.DataFrame(result_rows, columns=[f"ファイル①（{col1}）", f"ファイル②（{col2}）", "判定"])
+    else:
+        sorted_result = pd.DataFrame({
+            f"ファイル①（{col1}）": col1_series,
+            f"ファイル②（{col2}）": col2_series
+        })
+        sorted_result["判定"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+        sorted_result["判定"] = sorted_result["判定"].map(lambda x: "✅" if x else "❌")
 
-    # スタイリング
+    # スタイリング：一致=緑、不一致=赤、太字
     def highlight_row(row):
         color = "#d4edda" if row["判定"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
-    styled_df = result_df.style.apply(highlight_row, axis=1)
+    styled_df = sorted_result.style.apply(highlight_row, axis=1)
 
+    st.subheader("📋 比較結果")
     st.dataframe(styled_df, use_container_width=True)
 
-    # ダウンロード
-    csv = result_df.to_csv(index=False).encode("utf-8-sig")
+    csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
         label="📥 結果をCSVでダウンロード",
         data=csv,
