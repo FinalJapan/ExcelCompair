@@ -83,9 +83,6 @@ if file1 and file2:
 
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
-
-    # 並べ替え設定（列選択なしver）
-    st.subheader("🔀 並べ替え方法を選択")
     
     # 並び替え設定：ラジオボタン＋説明付き
     st.subheader("🔀 並び替え方法を選んでください")
