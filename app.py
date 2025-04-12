@@ -2,15 +2,26 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="Excel/CSV 比較アプリ v3.1", layout="wide")
-st.title("📊 Excel / CSV ファイル 比較アプリ（v3.1 アルファベット列表示対応）")
-st.caption("✔ 複数シート対応｜✔ 並べ替え対応｜✔ 完全ローカル実行｜✔ A列（列名）表示付き")
+# ✅ ページ設定（最初に書く！）
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.3", layout="wide")
 
-# 🔽 ファイルアップロード
-file1 = st.file_uploader("📄 ファイル①（CSV または Excel）", type=["csv", "xlsx"], key="file1")
-file2 = st.file_uploader("📄 ファイル②（CSV または Excel）", type=["csv", "xlsx"], key="file2")
+# ✅ チェックボックスの文字色対策
+st.markdown("""
+<style>
+div[class*="stCheckbox"] > label {
+    color: black !important;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# 🔠 列番号 → アルファベット変換関数
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.3 改善版）")
+st.caption("✔ 片方にしかないデータも表示｜✔ ✅/❌で比較結果明確｜✔ ダークテーマ対応")
+
+# アップロード
+file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"], key="file1")
+file2 = st.file_uploader("📄 ファイル②", type=["csv", "xlsx"], key="file2")
+
+# A列B列表示用関数
 def num_to_col_letter(n):
     result = ''
     while n >= 0:
@@ -18,12 +29,12 @@ def num_to_col_letter(n):
         n = n // 26 - 1
     return result
 
-# 🔽 シート名取得（Excelのみ）
+# シート取得関数
 def get_sheet_names(uploaded_file):
     xls = pd.ExcelFile(io.BytesIO(uploaded_file.read()))
     return xls.sheet_names
 
-# 🔽 ファイル読み込み関数（シート対応）
+# ファイル読み込み関数
 def read_file(uploaded_file, sheet_name=None):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
@@ -31,64 +42,71 @@ def read_file(uploaded_file, sheet_name=None):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()), sheet_name=sheet_name)
 
-# 🔽 シート選択（Excelのみ）
+# シート選択
 sheet1 = None
 sheet2 = None
 if file1 and file1.name.endswith(".xlsx"):
-    sheet_names1 = get_sheet_names(file1)
-    sheet1 = st.selectbox("🗂 ファイル①のシート選択", sheet_names1, key="sheet1")
+    sheet1 = st.selectbox("🗂 ファイル①のシート", get_sheet_names(file1), key="sheet1")
 if file2 and file2.name.endswith(".xlsx"):
-    sheet_names2 = get_sheet_names(file2)
-    sheet2 = st.selectbox("🗂 ファイル②のシート選択", sheet_names2, key="sheet2")
+    sheet2 = st.selectbox("🗂 ファイル②のシート", get_sheet_names(file2), key="sheet2")
 
-# 🔽 比較処理
+# ファイルがあるときだけ処理開始
 if file1 and file2:
-    df1 = read_file(file1, sheet1)
-    df2 = read_file(file2, sheet2)
+    df1 = read_file(file1, sheet1).reset_index(drop=True)
+    df2 = read_file(file2, sheet2).reset_index(drop=True)
 
     st.success("✅ ファイル読み込み成功！")
 
-    st.subheader("🔍 比較する列を選んでください")
-
-    # 🔠 ファイル①の列選択（A列表示付き）
+    # 比較列選択（A列付き）
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
-    selected1 = st.selectbox("ファイル①の列", options=col_options1, key="col_1")
+    selected1 = st.selectbox("ファイル①の列", col_options1, key="col_1")
     col1 = df1.columns[[i for i, s in enumerate(col_options1) if s == selected1][0]]
 
-    # 🔠 ファイル②の列選択（A列表示付き）
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
-    selected2 = st.selectbox("ファイル②の列", options=col_options2, key="col_2")
+    selected2 = st.selectbox("ファイル②の列", col_options2, key="col_2")
     col2 = df2.columns[[i for i, s in enumerate(col_options2) if s == selected2][0]]
 
-    # 🔄 比較処理
-    compare_len = min(len(df1), len(df2))
+    # 🔄 比較（最大行数に揃えて、NaNは空文字に）
+    max_len = max(len(df1), len(df2))
+    col1_data = df1[col1].reindex(range(max_len)).astype(str).fillna("")
+    col2_data = df2[col2].reindex(range(max_len)).astype(str).fillna("")
+
     col_name1 = file1.name
     col_name2 = file2.name
 
     comparison_result = pd.DataFrame({
-        col_name1: df1[col1].iloc[:compare_len].astype(str),
-        col_name2: df2[col2].iloc[:compare_len].astype(str)
+        col_name1: col1_data,
+        col_name2: col2_data
     })
-    comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
 
-    # 🔁 並べ替え
+    # ✅ 結果列を ✅ / ❌ に変換（チェックボックスより見やすい！）
+    comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
+    comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
+
+    # 並べ替え
     st.subheader("🔀 並べ替え設定")
-    sort_column = st.selectbox("並べ替える列を選択", comparison_result.columns, key="sort_column")
+    sort_column = st.selectbox("並べ替える列", comparison_result.columns, key="sort_column")
     sort_order = st.radio("並び順", ["昇順", "降順"], horizontal=True, key="sort_order")
-    is_ascending = True if sort_order == "昇順" else False
+    is_ascending = sort_order == "昇順"
     sorted_result = comparison_result.sort_values(by=sort_column, ascending=is_ascending)
 
-    # 🖍 色分け表示
+    # 色分け表示（チェック列は背景色つけない）
     def highlight_diff(row):
-        if row["一致しているか"]:
-            return ["background-color: #d4edda"] * len(row)
-        else:
-            return ["background-color: #f8d7da"] * len(row)
+        styles = []
+        for col in row.index:
+            if col == "一致しているか":
+                styles.append("")  # デフォルト
+            elif row["一致しているか"] == "✅":
+                styles.append("background-color: #f2fdf2; color: black")  # 緑
+            else:
+                styles.append("background-color: #fdf2f2; color: black")  # 赤
+        return styles
 
-    st.subheader("📋 比較結果（並び替え済み）")
+    # 表示
+    st.subheader("📋 比較結果")
     st.dataframe(sorted_result.style.apply(highlight_diff, axis=1), use_container_width=True)
 
-    # 💾 ダウンロード
+    # ダウンロード
     csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
         label="📥 結果をCSVでダウンロード",
