@@ -103,7 +103,7 @@ if file1 and file2:
 
     # 背景色・太字スタイル
     def highlight_row(row):
-        color = "#d4edda" if row["判定"] == "✅" else "#f8d7da"
+        color = "#e6f4ea" if row["判定"] == "✅" else "#fde0dc"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = sorted_result.style.apply(highlight_row, axis=1)
