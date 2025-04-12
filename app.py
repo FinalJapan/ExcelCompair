@@ -103,12 +103,12 @@ if file1 and file2:
             f"ファイル①（{col1}）": col1_series,
             f"ファイル②（{col2}）": col2_series
         })
-        sorted_result["判定"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
-        sorted_result["判定"] = sorted_result["判定"].map(lambda x: "✅" if x else "❌")
+        sorted_result["ステータス"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+        sorted_result["ステータス"] = sorted_result["ステータス"].map(lambda x: "✅" if x else "❌")
 
     # スタイリング：一致=緑、不一致=赤、太字
     def highlight_row(row):
-        color = "#d4edda" if row["判定"] == "✅" else "#f8d7da"
+        color = "#d4edda" if row["ステータス"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = sorted_result.style.apply(highlight_row, axis=1)
