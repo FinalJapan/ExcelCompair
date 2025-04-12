@@ -72,7 +72,7 @@ if file1 and file2:
     )
 
     # 並び替え処理
-    if sort_mode == "ファイル①の順にファイル②を並び替える":
+if sort_mode == "ファイル①の順にファイル②を並び替える":
     if df1[col1].duplicated().any():
         st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
         sorted_result = comparison_result
@@ -93,7 +93,7 @@ if file1 and file2:
         })
         sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
         sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
-
+   
 
     # 結果表示
     st.subheader("📋 比較結果")
