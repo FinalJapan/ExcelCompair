@@ -2,39 +2,38 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="Excel/CSV 比較アプリ", layout="wide")
-st.title("📊 Excel / CSV ファイル比較アプリ（複数シート対応・ローカル完結）")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v3.0", layout="wide")
+st.title("📊 Excel / CSV ファイル 比較アプリ（v3.0 完全版）")
+st.caption("✔ 複数シート対応｜✔ 並べ替え対応｜✔ 完全ローカル実行")
 
 # 🔽 ファイルアップロード
-file1 = st.file_uploader("📄 ファイル①をアップロード（CSV または Excel）", type=["csv", "xlsx"], key="file1")
-file2 = st.file_uploader("📄 ファイル②をアップロード（CSV または Excel）", type=["csv", "xlsx"], key="file2")
+file1 = st.file_uploader("📄 ファイル①（CSV または Excel）", type=["csv", "xlsx"], key="file1")
+file2 = st.file_uploader("📄 ファイル②（CSV または Excel）", type=["csv", "xlsx"], key="file2")
 
-# 🔽 シート名を取得（Excelファイル用）
+# 🔽 シート名取得（Excelのみ）
 def get_sheet_names(uploaded_file):
     xls = pd.ExcelFile(io.BytesIO(uploaded_file.read()))
     return xls.sheet_names
 
-# 🔽 ファイル読み込み関数（シート指定可能）
+# 🔽 ファイル読み込み関数（シート対応）
 def read_file(uploaded_file, sheet_name=None):
-    uploaded_file.seek(0)  # ファイル読み直しのため位置リセット
+    uploaded_file.seek(0)  # 読み直し
     if uploaded_file.name.endswith(".csv"):
         return pd.read_csv(io.StringIO(uploaded_file.read().decode("cp932", errors="ignore")))
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()), sheet_name=sheet_name)
 
-# 🔽 シート選択UI
+# 🔽 シート選択（Excelのみ）
 sheet1 = None
 sheet2 = None
-
 if file1 and file1.name.endswith(".xlsx"):
     sheet_names1 = get_sheet_names(file1)
-    sheet1 = st.selectbox("📑 ファイル①のシートを選択", sheet_names1, key="sheet1")
-
+    sheet1 = st.selectbox("🗂 ファイル①のシート選択", sheet_names1, key="sheet1")
 if file2 and file2.name.endswith(".xlsx"):
     sheet_names2 = get_sheet_names(file2)
-    sheet2 = st.selectbox("📑 ファイル②のシートを選択", sheet_names2, key="sheet2")
+    sheet2 = st.selectbox("🗂 ファイル②のシート選択", sheet_names2, key="sheet2")
 
-# 🔽 両方のファイルがある場合のみ処理を実行
+# 🔽 ファイルが揃ったら処理開始
 if file1 and file2:
     df1 = read_file(file1, sheet1)
     df2 = read_file(file2, sheet2)
@@ -54,21 +53,27 @@ if file1 and file2:
         col_name1: df1[col1].iloc[:compare_len].astype(str),
         col_name2: df2[col2].iloc[:compare_len].astype(str)
     })
-
     comparison_result["一致しているか"] = comparison_result[col_name1] == comparison_result[col_name2]
 
-    # 色付き表示用関数
+    # ✅ 並べ替え機能
+    st.subheader("🔀 並べ替え設定")
+    sort_column = st.selectbox("並べ替える列を選択", comparison_result.columns, key="sort_column")
+    sort_order = st.radio("並び順", ["昇順", "降順"], horizontal=True, key="sort_order")
+    is_ascending = True if sort_order == "昇順" else False
+    sorted_result = comparison_result.sort_values(by=sort_column, ascending=is_ascending)
+
+    # ✅ 表示（色付き）
     def highlight_diff(row):
         if row["一致しているか"]:
-            return ["background-color: #d4edda"] * len(row)  # 緑
+            return ["background-color: #d4edda"] * len(row)
         else:
-            return ["background-color: #f8d7da"] * len(row)  # 赤
+            return ["background-color: #f8d7da"] * len(row)
 
-    st.subheader("📋 比較結果")
-    st.dataframe(comparison_result.style.apply(highlight_diff, axis=1), use_container_width=True)
+    st.subheader("📋 比較結果（並び替え済み）")
+    st.dataframe(sorted_result.style.apply(highlight_diff, axis=1), use_container_width=True)
 
-    # ダウンロードボタン
-    csv = comparison_result.to_csv(index=False).encode("utf-8-sig")
+    # ✅ CSVダウンロード
+    csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
         label="📥 結果をCSVでダウンロード",
         data=csv,
