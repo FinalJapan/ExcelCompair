@@ -20,7 +20,7 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.3.6 完成版）")
+st.title("📊 Excel / CSV 比較アプリ")
 
 # アップロードUI（ラベルなし）
 with st.container():
@@ -65,7 +65,7 @@ if file1 and file2:
         "ファイル①をマスターデータとして、ファイル②をどう扱うか？",
         options=[
             "元のまま表示（並び替えしない）",
-            "ファイル①の順にファイル②を並び替える（余りは表示しない）"
+            "ファイル①の順にファイル②を並び替える"
         ],
         index=0
     )
@@ -73,7 +73,7 @@ if file1 and file2:
     col1_series = df1[col1].astype(str)
     col2_series = df2[col2].astype(str)
 
-    if sort_mode == "ファイル①の順にファイル②を並び替える（余りは表示しない）":
+    if sort_mode == "ファイル①の順にファイル②を並び替える":
         used = [False] * len(col2_series)
         result_rows = []
 
@@ -98,12 +98,12 @@ if file1 and file2:
             f"ファイル①（{col1}）": col1_series,
             f"ファイル②（{col2}）": col2_series
         })
-        sorted_result["判定"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
-        sorted_result["判定"] = sorted_result["判定"].map(lambda x: "✅" if x else "❌")
+        sorted_result["ステータス"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+        sorted_result["ステータス"] = sorted_result["ステータス"].map(lambda x: "✅" if x else "❌")
 
     # 背景色・太字スタイル
     def highlight_row(row):
-        color = "#e6f4ea" if row["判定"] == "✅" else "#fde0dc"
+        color = "#e6f4ea" if row["ステータス"] == "✅" else "#fde0dc"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = sorted_result.style.apply(highlight_row, axis=1)
