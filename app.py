@@ -86,7 +86,7 @@ if file1 and file2:
                     found = True
                     break
             if not found:
-                result_rows.append((v, "", "❌"))
+                result_rows.append((v, None, "❌"))
 
         sorted_result = pd.DataFrame(result_rows, columns=[
             f"ファイル①（{col1}）",
