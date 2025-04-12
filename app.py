@@ -55,6 +55,12 @@ if file1 and file2:
         sheet2 = st.selectbox("🗂 ファイル②のシート", get_sheet_names(file2_data), key="sheet2")
 
     df1 = read_file(file1_data, file1.name, sheet1).reset_index(drop=True)
+    # ✅ りゅうじが含まれているか簡単にチェック
+if 'りゅうじ' in df1[col1].astype(str).tolist():
+    st.success("🎉 ファイル①に『りゅうじ』はいます！")
+else:
+    st.error("😢 ファイル①に『りゅうじ』はいません…（読み込みか列選択の問題）")
+
     df2 = read_file(file2_data, file2.name, sheet2).reset_index(drop=True)
 
     # ✅ データがちゃんと読み込まれてるか表示して確認！
@@ -69,6 +75,7 @@ st.write(df2.head(10))
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
     selected1 = st.selectbox("ファイル①の列", col_options1, key="col_1")
     col1 = df1.columns[[i for i, s in enumerate(col_options1) if s == selected1][0]]
+
 　　# ✅ 選んだ列に「りゅうじ」がいるか確認！
 st.subheader("🔍 選んだ列の上から10件（りゅうじ確認）")
 st.write("ファイル①：" + col1)
