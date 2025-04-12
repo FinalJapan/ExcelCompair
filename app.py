@@ -62,16 +62,17 @@ if file1 and file2:
     elif sort_mode == "ファイル①の順にファイル②を並べる":
         df2_indexed = df2.set_index(col2).astype(str)
         col1_series = df1[col1].astype(str)
-
-        # ファイル①の順番にファイル②を揃える（存在しないデータは空欄）
-        col2_sorted = df2_indexed.reindex(col1_series)[col2].fillna("")
-
+    
+        # reindexして index から値を取得
+        col2_sorted_index = df2_indexed.reindex(col1_series).index.to_series().fillna("")
+    
         sorted_result = pd.DataFrame({
             f"ファイル①（{col1}）": col1_series,
-            f"ファイル②（{col2}）": col2_sorted
+            f"ファイル②（{col2}）": col2_sorted_index
         })
         sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
         sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
+
 
     elif sort_mode == "❌を上に表示（不一致優先）":
         sorted_result = comparison_result.sort_values(by="一致しているか")
