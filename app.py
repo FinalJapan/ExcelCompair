@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.1", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ", layout="wide")
 
 # テーマ調整（ライト風・黒文字）
 st.markdown("""
@@ -83,7 +83,7 @@ if file1 and file2:
 
     # スタイル設定：行全体に背景色 + 太字
     def highlight_row(row):
-        color = "#d4edda" if row["一致しているか"] == "✅" else "#f8d7da"
+        color = "#d4edda" if row["一致"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = result_df.style.apply(highlight_row, axis=1)
