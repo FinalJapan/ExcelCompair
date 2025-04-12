@@ -3,10 +3,9 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.0", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ v4.1", layout="wide")
 
-# ページタイトル
-st.title("📊 Excel / CSV 比較アプリ（v4.0 完全版）")
+st.title("📊 Excel / CSV 比較アプリ（v4.1）")
 
 # アップロード
 file1 = st.file_uploader("📄 ファイル①", type=["csv", "xlsx"])
@@ -20,21 +19,21 @@ def read_file(uploaded_file):
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
-# アプリ本体
+# メイン処理
 if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
     st.success("✅ ファイル読み込み完了！")
 
-    # 列選択
+    # 比較列選択
     col1 = st.selectbox("ファイル①の比較列を選択", df1.columns)
     col2 = st.selectbox("ファイル②の比較列を選択", df2.columns)
 
-    # 比較列抽出（型統一）
+    # 比較対象列の抽出と整形
     col1_data = df1[col1].astype(str).fillna("")
     col2_data = df2[col2].astype(str).fillna("")
 
-    # 比較結果作成
+    # 初期比較結果作成
     comparison_result = pd.DataFrame({
         f"ファイル①（{col1}）": col1_data,
         f"ファイル②（{col2}）": col2_data
@@ -48,6 +47,7 @@ if file1 and file2:
         "並び替え方法を選んでください",
         options=[
             "Excelの入力順（A2から順番）",
+            "ファイル①の順にファイル②を並べる",
             "❌を上に表示（不一致優先）",
             "比較列の昇順",
             "比較列の降順"
@@ -58,6 +58,20 @@ if file1 and file2:
     # 並び替え処理
     if sort_mode == "Excelの入力順（A2から順番）":
         sorted_result = comparison_result
+
+    elif sort_mode == "ファイル①の順にファイル②を並べる":
+        df2_indexed = df2.set_index(col2).astype(str)
+        col1_series = df1[col1].astype(str)
+
+        # ファイル①の順番にファイル②を揃える（存在しないデータは空欄）
+        col2_sorted = df2_indexed.reindex(col1_series)[col2].fillna("")
+
+        sorted_result = pd.DataFrame({
+            f"ファイル①（{col1}）": col1_series,
+            f"ファイル②（{col2}）": col2_sorted
+        })
+        sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+        sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
 
     elif sort_mode == "❌を上に表示（不一致優先）":
         sorted_result = comparison_result.sort_values(by="一致しているか")
@@ -72,7 +86,7 @@ if file1 and file2:
     st.subheader("📋 比較結果")
     st.dataframe(sorted_result, use_container_width=True)
 
-    # ダウンロード
+    # ダウンロードボタン
     csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
     st.download_button(
         label="📥 結果をCSVでダウンロード",
