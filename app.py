@@ -13,7 +13,7 @@ div[class*="stCheckbox"] > label { color: black !important; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Excel / CSV 比較アプリ（v4.1 完成版）")
+st.title("📊 Excel / CSV 比較アプリ")
 
 # ファイル読み込み関数
 def read_file(uploaded_file):
@@ -83,7 +83,7 @@ if file1 and file2:
 
     # スタイル設定：行全体に背景色 + 太字
     def highlight_row(row):
-        color = "#d4edda" if row["一致しているか"] == "✅" else "#f8d7da"
+        color = "#d4edda" if row["True or False"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = result_df.style.apply(highlight_row, axis=1)
