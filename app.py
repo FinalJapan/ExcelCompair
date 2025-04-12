@@ -78,12 +78,12 @@ if file1 and file2:
         f"ファイル①（{col1}）": col1_series,
         f"ファイル②（{col2}）": file2_aligned
     })
-    result_df["判定"] = result_df[f"ファイル①（{col1}）"] == result_df[f"ファイル②（{col2}）"]
-    result_df["判定"] = result_df["判定"].map(lambda x: "✅" if x else "❌")
+    result_df["ステータス"] = result_df[f"ファイル①（{col1}）"] == result_df[f"ファイル②（{col2}）"]
+    result_df["ステータス"] = result_df["ステータス"].map(lambda x: "✅" if x else "❌")
 
     # スタイル設定：行全体に背景色 + 太字
     def highlight_row(row):
-        color = "#d4edda" if row["判定"] == "✅" else "#f8d7da"
+        color = "#d4edda" if row["ステータス"] == "✅" else "#f8d7da"
         return [f"background-color: {color}; color: black; font-weight: bold;"] * len(row)
 
     styled_df = result_df.style.apply(highlight_row, axis=1)
