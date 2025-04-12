@@ -15,8 +15,6 @@ div[class*="stCheckbox"] > label {
 """, unsafe_allow_html=True)
 
 st.title("📊 Excel / CSV ファイル 比較アプリ（v3.2 最終版）")
-
-st.title("📊 Excel / CSV ファイル 比較アプリ（v3.2 最終版）")
 st.caption("✔ 複数シート対応｜✔ 並べ替え｜✔ アルファベット列名｜✔ UI見やすさ改善")
 
 # ファイルアップロード
