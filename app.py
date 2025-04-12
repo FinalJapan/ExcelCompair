@@ -3,7 +3,7 @@ import pandas as pd
 import io
 
 # ページ設定
-st.set_page_config(page_title="Excel/CSV 比較アプリ v4.3.6", layout="wide")
+st.set_page_config(page_title="Excel/CSV 比較アプリ", layout="wide")
 
 # カスタムCSS
 st.markdown("""
