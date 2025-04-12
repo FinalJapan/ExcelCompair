@@ -97,7 +97,7 @@ if file1 and file2:
             if not found:
                 result_rows.append((v, "", "❌"))
 
-        sorted_result = pd.DataFrame(result_rows, columns=[f"ファイル①（{col1}）", f"ファイル②（{col2}）", "判定"])
+        sorted_result = pd.DataFrame(result_rows, columns=[f"ファイル①（{col1}）", f"ファイル②（{col2}）", "ステータス"])
     else:
         sorted_result = pd.DataFrame({
             f"ファイル①（{col1}）": col1_series,
