@@ -73,17 +73,18 @@ if file1 and file2:
     col1_data = df1[col1].reindex(range(max_len)).astype(str).fillna("")
     col2_data = df2[col2].reindex(range(max_len)).astype(str).fillna("")
 
-    col_name1 = file1.name
-    col_name2 = file2.name
-
-    # 比較結果テーブル作成（列名を選択された列名に合わせる！）
-    comparison_result = pd.DataFrame({
-        f"ファイル①（{col1}）": col1_data,
-        f"ファイル②（{col2}）": col2_data
-    })
+    # 比較列の選択
+    col1 = st.selectbox("ファイル①の比較列を選択", df1.columns)
+    col2 = st.selectbox("ファイル②の比較列を選択", df2.columns)
     
+    # 比較結果の作成
+    comparison_result = pd.DataFrame({
+        f"ファイル①（{col1}）": df1[col1],
+        f"ファイル②（{col2}）": df2[col2]
+    })
     comparison_result["一致しているか"] = comparison_result[f"ファイル①（{col1}）"] == comparison_result[f"ファイル②（{col2}）"]
     comparison_result["一致しているか"] = comparison_result["一致しているか"].map(lambda x: "✅" if x else "❌")
+
 
     
     # 並び替え設定：ラジオボタン＋説明付き
@@ -99,20 +100,24 @@ if file1 and file2:
         help="ファイル①の比較列の順番に合わせて、ファイル②の値を並び替えます。"
     )
     
-    # 並び替え処理（比較列に固定）
+    # 並び替えの実行
     if sort_mode == "ファイル①の順にファイル②を並び替える":
-        # 重複チェック：ファイル①の比較列に同じ値が複数あると reindex できない
         if df1[col1].duplicated().any():
             st.warning("⚠ 並び替えできません：ファイル①の比較列に重複があります。")
             sorted_result = comparison_result
         else:
-            # ファイル②の比較列を、ファイル①の比較列順に並び替える
-            sorted_result = comparison_result.set_index(comparison_result.columns[1]).reindex(df1[col1]).reset_index()
+            merged_df = pd.merge(df1[[col1]], df2[[col2]], left_on=col1, right_on=col2, how='left')
+            sorted_result = pd.DataFrame({
+                f"ファイル①（{col1}）": merged_df[col1],
+                f"ファイル②（{col2}）": merged_df[col2]
+            })
+            sorted_result["一致しているか"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
+            sorted_result["一致しているか"] = sorted_result["一致しているか"].map(lambda x: "✅" if x else "❌")
     else:
         sorted_result = comparison_result
-
-
-
+    
+    # 結果の表示
+    st.dataframe(sorted_result)
     
     # ✅ 背景色すべての列に適用（✅/❌列にも戻した）
     def highlight_diff(row):
