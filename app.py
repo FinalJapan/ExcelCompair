@@ -31,7 +31,7 @@ with st.container():
         help="ファイル②をここにドラッグ＆ドロップするか、クリックで選択")
 
 # ファイル読み込み
-def read_file(uploaded_file):
+def read_file(uploaded_file, sheet_name=None):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
         try:
@@ -40,7 +40,10 @@ def read_file(uploaded_file):
             uploaded_file.seek(0)
             return pd.read_csv(io.StringIO(uploaded_file.read().decode("cp932", errors="ignore")))
     else:
-        return pd.read_excel(io.BytesIO(uploaded_file.read()))
+        if sheet_name:
+            return pd.read_excel(io.BytesIO(uploaded_file.read()), sheet_name=sheet_name)
+        else:
+            return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
 # 列名変換（A列、B列 表記）
 def num_to_col_letter(n):
@@ -52,8 +55,25 @@ def num_to_col_letter(n):
 
 # アプリ本体
 if file1 and file2:
-    df1 = read_file(file1).reset_index(drop=True)
-    df2 = read_file(file2).reset_index(drop=True)
+    # ファイル①のシート選択
+    if file1.name.endswith(".xlsx"):
+        excel1 = pd.ExcelFile(io.BytesIO(file1.read()))
+        sheet_options1 = excel1.sheet_names
+        sheet1 = st.selectbox("ファイル①のシートを選んでください", sheet_options1)
+    else:
+        sheet1 = None
+
+    # ファイル②のシート選択
+    if file2.name.endswith(".xlsx"):
+        excel2 = pd.ExcelFile(io.BytesIO(file2.read()))
+        sheet_options2 = excel2.sheet_names
+        sheet2 = st.selectbox("ファイル②のシートを選んでください", sheet_options2)
+    else:
+        sheet2 = None
+
+    # ファイル読み込み
+    df1 = read_file(file1, sheet_name=sheet1).reset_index(drop=True)
+    df2 = read_file(file2, sheet_name=sheet2).reset_index(drop=True)
     st.success("✅ ファイル読み込み成功！")
 
     # 行数チェック
