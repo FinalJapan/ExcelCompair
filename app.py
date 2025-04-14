@@ -34,7 +34,11 @@ with st.container():
 def read_file(uploaded_file):
     uploaded_file.seek(0)
     if uploaded_file.name.endswith(".csv"):
-        return pd.read_csv(io.StringIO(uploaded_file.read().decode("cp932", errors="ignore")))
+        try:
+            return pd.read_csv(io.StringIO(uploaded_file.read().decode("utf-8")))
+        except UnicodeDecodeError:
+            uploaded_file.seek(0)
+            return pd.read_csv(io.StringIO(uploaded_file.read().decode("cp932", errors="ignore")))
     else:
         return pd.read_excel(io.BytesIO(uploaded_file.read()))
 
@@ -51,6 +55,10 @@ if file1 and file2:
     df1 = read_file(file1).reset_index(drop=True)
     df2 = read_file(file2).reset_index(drop=True)
     st.success("✅ ファイル読み込み成功！")
+
+    # 行数チェック
+    if len(df1) != len(df2) and sort_mode == "元のまま表示（並び替えしない）":
+        st.warning("⚠️ 行数が一致していないため、正確な比較ができない可能性があります。")
 
     # 比較列選択
     col_options1 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df1.columns)]
@@ -101,6 +109,11 @@ if file1 and file2:
         sorted_result["ステータス"] = sorted_result[f"ファイル①（{col1}）"] == sorted_result[f"ファイル②（{col2}）"]
         sorted_result["ステータス"] = sorted_result["ステータス"].map(lambda x: "✅" if x else "❌")
 
+    # 結果件数の表示
+    matched = (sorted_result["ステータス"] == "✅").sum()
+    unmatched = (sorted_result["ステータス"] == "❌").sum()
+    st.markdown(f"**✅ 一致: {matched} 件　❌ 不一致: {unmatched} 件**")
+
     # 背景色・太字スタイル
     def highlight_row(row):
         color = "#e6f4ea" if row["ステータス"] == "✅" else "#fde0dc"
@@ -110,7 +123,11 @@ if file1 and file2:
 
     # 表示
     st.subheader("📋 比較結果")
-    st.dataframe(styled_df, use_container_width=True)
+    if len(sorted_result) > 1000:
+        st.info("表示数が多いため最初の1000行のみ表示しています")
+        st.dataframe(styled_df.head(1000), use_container_width=True)
+    else:
+        st.dataframe(styled_df, use_container_width=True)
 
     # CSV出力
     csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
@@ -120,3 +137,16 @@ if file1 and file2:
         file_name="比較結果.csv",
         mime="text/csv"
     )
+    
+    # Excel出力
+    try:
+        import openpyxl
+        excel = sorted_result.to_excel(index=False, engine='openpyxl')
+        st.download_button(
+            label="📥 結果をExcelでダウンロード",
+            data=excel,
+            file_name="比較結果.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    except ImportError:
+        st.warning("Excel出力には`openpyxl`ライブラリが必要です。")
