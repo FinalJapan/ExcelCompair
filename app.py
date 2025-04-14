@@ -71,7 +71,7 @@ if file1 and file2:
     else:
         sheet2 = None
 
-    # 並び替えモードの選択（修正点）
+    # 並び替えモードの選択
     sort_mode = st.radio(
         "🔀 並び替え方法を選んでください",
         options=[
