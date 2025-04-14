@@ -71,6 +71,16 @@ if file1 and file2:
     else:
         sheet2 = None
 
+    # 並び替えモードの選択（修正点）
+    sort_mode = st.radio(
+        "🔀 並び替え方法を選んでください",
+        options=[
+            "元のまま表示（並び替えしない）",
+            "ファイル①の順にファイル②を並び替える"
+        ],
+        index=0
+    )
+
     # ファイル読み込み
     df1 = read_file(file1, sheet_name=sheet1).reset_index(drop=True)
     df2 = read_file(file2, sheet_name=sheet2).reset_index(drop=True)
@@ -86,17 +96,6 @@ if file1 and file2:
 
     col_options2 = [f"{num_to_col_letter(i)}列（{col}）" for i, col in enumerate(df2.columns)]
     col2 = df2.columns[col_options2.index(st.selectbox("ファイル②の列", col_options2, index=0))]
-
-    # 比較モード
-    st.subheader("🔀 並び替え方法を選んでください")
-    sort_mode = st.radio(
-        "",
-        options=[
-            "元のまま表示（並び替えしない）",
-            "ファイル①の順にファイル②を並び替える"
-        ],
-        index=0
-    )
 
     col1_series = df1[col1].astype(str)
     col2_series = df2[col2].astype(str)
