@@ -101,16 +101,16 @@ if file1 and file2:
     )
     
     # 比較用に連結文字列を作成
-col1_series = df1[selected_cols1].astype(str).agg(" | ".join, axis=1)
-col2_series = df2[selected_cols2].astype(str).agg(" | ".join, axis=1)
+    col1_series = df1[selected_cols1].astype(str).agg(" | ".join, axis=1)
+    col2_series = df2[selected_cols2].astype(str).agg(" | ".join, axis=1)
 
-# 👇 これを追加！
-if len(col1_series) != len(col2_series):
-    st.warning(f"⚠ 行数が一致していません（ファイル①: {len(col1_series)}行、ファイル②: {len(col2_series)}行）。短い方に合わせて比較します。")
+    # 👇 これを追加！
+    if len(col1_series) != len(col2_series):
+        st.warning(f"⚠ 行数が一致していません（ファイル①: {len(col1_series)}行、ファイル②: {len(col2_series)}行）。短い方に合わせて比較します。")
 
-min_len = min(len(col1_series), len(col2_series))
-col1_series = col1_series.iloc[:min_len]
-col2_series = col2_series.iloc[:min_len]
+    min_len = min(len(col1_series), len(col2_series))
+    col1_series = col1_series.iloc[:min_len]
+    col2_series = col2_series.iloc[:min_len]
 
     # 比較処理
     if sort_mode == "ファイル①の順にファイル②を並び替える":
