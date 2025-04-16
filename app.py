@@ -141,22 +141,38 @@ if file1 and file2:
         sorted_result["ステータス"] = status_col
 
     # 表示
-st.subheader("📋 比較結果")
-
-    # ステータス列があるかチェック
+# 結果表示セクション
+    st.subheader("📋 比較結果")
+    
     if "ステータス" in sorted_result.columns:
         # ✅ ステータス列だけ色つけ
         def highlight_status(val):
             if val == "✅":
                 return "background-color: #e6f4ea; color: black; font-weight: bold;"
-            else:
+            elif val == "❌":
                 return "background-color: #fde0dc; color: black; font-weight: bold;"
+            else:
+                return ""
     
-        styled_df = sorted_result.style.applymap(highlight_status, subset=["ステータス"])
-        st.dataframe(styled_df, use_container_width=True)
+        try:
+            styled_df = sorted_result.style.applymap(highlight_status, subset=["ステータス"])
+            st.dataframe(styled_df, use_container_width=True)
+        except Exception as e:
+            st.error(f"⚠ 表の表示でエラーが発生しました。エラー内容: {e}")
+            st.dataframe(sorted_result, use_container_width=True)
     else:
-        # 🟡 ステータス列が無い場合はそのまま表示（エラー回避）
+        st.warning("⚠ 'ステータス' 列が見つからなかったため、通常表示します。")
         st.dataframe(sorted_result, use_container_width=True)
+    
+    # ダウンロードボタン（重複なし）
+    csv = sorted_result.to_csv(index=False).encode("utf-8-sig")
+    st.download_button(
+        label="📥 結果をCSVでダウンロード",
+        data=csv,
+        file_name="比較結果_3列.csv",
+        mime="text/csv"
+    )
+
 
 
 
