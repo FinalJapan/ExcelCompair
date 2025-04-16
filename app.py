@@ -140,15 +140,24 @@ if file1 and file2:
         sorted_result = pd.concat([df1_selected.reset_index(drop=True), df2_selected.reset_index(drop=True)], axis=1)
         sorted_result["ステータス"] = status_col
 
-    # ステータス列だけ色をつける関数
-    def highlight_status(val):
-        if val == "✅":
-            return "background-color: #e6f4ea; color: black; font-weight: bold;"
-        else:
-            return "background-color: #fde0dc; color: black; font-weight: bold;"
+    # 表示
+st.subheader("📋 比較結果")
 
-    # "ステータス"列にだけスタイルを適用
-    styled_df = sorted_result.style.applymap(highlight_status, subset=["ステータス"])
+    # ステータス列があるかチェック
+    if "ステータス" in sorted_result.columns:
+        # ✅ ステータス列だけ色つけ
+        def highlight_status(val):
+            if val == "✅":
+                return "background-color: #e6f4ea; color: black; font-weight: bold;"
+            else:
+                return "background-color: #fde0dc; color: black; font-weight: bold;"
+    
+        styled_df = sorted_result.style.applymap(highlight_status, subset=["ステータス"])
+        st.dataframe(styled_df, use_container_width=True)
+    else:
+        # 🟡 ステータス列が無い場合はそのまま表示（エラー回避）
+        st.dataframe(sorted_result, use_container_width=True)
+
 
 
     # 表示
